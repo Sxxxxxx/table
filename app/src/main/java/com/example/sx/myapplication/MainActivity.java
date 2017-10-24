@@ -14,9 +14,12 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
@@ -27,5 +30,10 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        TableView table = (TableView) findViewById(R.id.table);
+        LinearLayout x = (LinearLayout) findViewById(R.id.ll_x);
+        LinearLayout y = (LinearLayout) findViewById(R.id.ll_y);
+        table.setBothScrollView(x, y);
+        table.setData(10, new Date(), new ArrayList<Room>());
     }
 }

@@ -7,7 +7,6 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.support.annotation.Nullable;
-import android.support.v4.view.MotionEventCompat;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -17,27 +16,40 @@ import android.view.View;
 import android.view.ViewConfiguration;
 import android.widget.Scroller;
 
+import java.util.Date;
+import java.util.List;
+
 /**
  * Created by sx on 2017/10/19.
  */
 
-public class CustomerView extends View {
+public class TableView extends View {
 
-    private DisplayMetrics dm;
+    private DisplayMetrics mDm;
     private Scroller mScroller;
-    private Rect rect;
+    private Rect mRect;//计算statusBar高度
+    private int unitWidth;
+    private int unitHeight;
+    private VelocityTracker mVelocityTracker;
 
-    public CustomerView(Context context) {
+    private int mMinimumVelocity;
+    private int mMaximumVelocity;
+    private Paint paint = new Paint();
+    private Paint painttext = new Paint();
+    private View mTopView;
+    private View mLeftView;
+
+    public TableView(Context context) {
         super(context);
         init();
     }
 
-    public CustomerView(Context context, @Nullable AttributeSet attrs) {
+    public TableView(Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
         init();
     }
 
-    public CustomerView(Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
+    public TableView(Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         init();
     }
@@ -45,60 +57,73 @@ public class CustomerView extends View {
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-        setMeasuredDimension(unitWidth * 100, unitHeight * 100);
-        Log.i("onMeasure: ", getMeasuredWidth() + "    " + getMeasuredHeight() + "");
-        Log.i("dm: ", dm.widthPixels + "    " + dm.heightPixels);
+        setMeasuredDimension(unitWidth * 14, unitHeight * 100);
     }
 
-    int unitWidth;
-    int unitHeight;
-    VelocityTracker mVelocityTracker;
-
-    private int mMinimumVelocity;
-    private int mMaximumVelocity;
+    /***
+     * 设置数据
+     * @param line 行数
+     * @param startDate 开始日期
+     * @param rooms 正在使用的房间信息
+     */
+    public void setData(int line, Date startDate, List<Room> rooms) {
+        mData = new int[line][14];
+        invalidate();
+    }
 
     private void init() {
-        dm = new DisplayMetrics();
-        ((Activity) getContext()).getWindowManager().getDefaultDisplay().getMetrics(dm);
+        mDm = new DisplayMetrics();
+        ((Activity) getContext()).getWindowManager().getDefaultDisplay().getMetrics(mDm);
         paint.setTextAlign(Paint.Align.CENTER);
         paint.setColor(Color.RED);
         painttext.setColor(Color.GRAY);
         painttext.setAntiAlias(true);
-        paint.setTextSize((float) (dm.density * 20 + 0.5));
-        unitHeight = dm.heightPixels / 8;
-        unitWidth = dm.widthPixels / 5;
+        paint.setTextSize((float) (mDm.density * 20 + 0.5));
+        unitHeight = (int) (mDm.density * 50 + 0.5);//格子的宽高为50dp
+        unitWidth = (int) (mDm.density * 50 + 0.5);
         ViewConfiguration configuration = ViewConfiguration.get(getContext());
         mMaximumVelocity = configuration.getScaledMaximumFlingVelocity();
         mMinimumVelocity = configuration.getScaledMinimumFlingVelocity();
         mScroller = new Scroller(getContext());
-
     }
 
-    private Paint paint = new Paint();
-    private Paint painttext = new Paint();
+    /***
+     * 滑动的同时同步左边和上边的view
+     * @param topView
+     * @param leftView
+     */
+    public void setBothScrollView(View topView, View leftView) {
+        this.mTopView = topView;
+        this.mLeftView = leftView;
+    }
+
+    @Override
+    protected void onScrollChanged(int l, int t, int oldl, int oldt) {
+        super.onScrollChanged(l, t, oldl, oldt);
+        if (mTopView != null) {
+            mTopView.scrollTo(l, t);
+        }
+        if (mLeftView != null) {
+            mLeftView.scrollTo(l, t);
+        }
+    }
 
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-        for (int i = 0; i < 100; i++) {
-            canvas.drawLine(0, dm.heightPixels / 8 * i, unitWidth * 100, dm.heightPixels / 8 * i, painttext);
-        }
-        for (int i = 0; i < 100; i++) {
-            canvas.drawLine(dm.widthPixels / 5 * i, 0, dm.widthPixels / 5 * i, unitHeight * 100, painttext);
-        }
-//        canvas.drawText("你好", dm.widthPixels / 10, dm.heightPixels / 16 - 20, paint);
+
     }
 
     int downX;
     int downY;
+    int upX;
+    int upY;
+    int[][] mData;
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
 
         if (event.getAction() == MotionEvent.ACTION_DOWN && event.getEdgeFlags() != 0) {
-            // Don't handle edge touches immediately -- they may actually belong
-            // to one of our
-            // descendants.
             return false;
         }
         if (mVelocityTracker == null) {
@@ -114,24 +139,21 @@ public class CustomerView extends View {
                 if (!mScroller.isFinished()) {
                     mScroller.abortAnimation();
                 }
-//                Log.i(index + "down", "x= " + event.getX(index) + "   y=" + event.getY(index));
                 break;
             case MotionEvent.ACTION_MOVE:
                 int x = (int) event.getX();
                 int y = (int) event.getY();
-//                Log.i("move", "x= " + x + "   y=" + y);
                 int moveX = downX - x;
                 downX = x;
                 int moveY = downY - y;
                 downY = y;
-//                Log.i("scrollX", "x: " + getScrollX());
-//                Log.i("scrollY", "y: " + getScrollY());
+
                 if (moveX < 0) {
                     if (getScrollX() + moveX < 0) {
                         moveX = 0;
                     }
                 } else {
-                    if (getScrollX() + moveX > getMeasuredWidth() - dm.widthPixels) {
+                    if (getScrollX() + moveX > getMeasuredWidth() - mDm.widthPixels) {
                         moveX = 0;
                     }
                 }
@@ -140,28 +162,28 @@ public class CustomerView extends View {
                         moveY = 0;
                     }
                 } else {
-                    if (getScrollY() + moveY > getMeasuredHeight() - dm.heightPixels) {
+                    if (getScrollY() + moveY > getMeasuredHeight() - mDm.heightPixels) {
                         moveY = 0;
                     }
                 }
                 scrollBy(moveX, moveY);
                 break;
-            case MotionEvent.ACTION_POINTER_DOWN:
-                index = event.getActionIndex();
-//                Log.i(index + "Pointerdown", "x= " + event.getX(index) + "   y=" + event.getY(index));
-                break;
             case MotionEvent.ACTION_UP:
+                upX = (int) event.getX();
+                upY = (int) event.getY();
+
+                if (upX == downX && upY == downY) {//点击事件，选中格子
+
+                }
                 mVelocityTracker.computeCurrentVelocity(1000, mMaximumVelocity);
                 float xVelocity = mVelocityTracker.getXVelocity();
                 float yVelocity = mVelocityTracker.getYVelocity();
-//                mScroller.startScroll(getScrollX(), getScrollY(), 20, 20);
-                if (rect == null) {
-                    rect = new Rect();
-                    ((Activity) getContext()).getWindow().getDecorView().getWindowVisibleDisplayFrame(rect);
-                    Log.i("init:", rect.top + "");
+                if (mRect == null) {
+                    mRect = new Rect();
+                    ((Activity) getContext()).getWindow().getDecorView().getWindowVisibleDisplayFrame(mRect);
                 }
                 if (Math.abs(xVelocity) > xVelocity || Math.abs(yVelocity) > mMinimumVelocity) {
-                    mScroller.fling(getScrollX(), getScrollY(), -(int) xVelocity, -(int) yVelocity, 0, getMeasuredWidth() - dm.widthPixels, 0, getMeasuredHeight() - dm.heightPixels + rect.top);
+                    mScroller.fling(getScrollX(), getScrollY(), -(int) xVelocity, -(int) yVelocity, 0, getMeasuredWidth() - mDm.widthPixels, 0, getMeasuredHeight() - mDm.heightPixels + mRect.top);
                 }
                 invalidate();
                 if (mVelocityTracker != null) {
@@ -179,6 +201,19 @@ public class CustomerView extends View {
         if (mScroller.computeScrollOffset()) {
             scrollTo(mScroller.getCurrX(), mScroller.getCurrY());
             postInvalidate();
+        }
+    }
+
+    @Override
+    protected void dispatchDraw(Canvas canvas) {
+        super.dispatchDraw(canvas);
+        if (mData != null) {
+            for (int i = 0; i < mData.length; i++) {
+                canvas.drawLine(0, unitHeight * i, unitWidth * 14, unitHeight * i, painttext);
+            }
+            for (int i = 0; i < mData[0].length; i++) {
+                canvas.drawLine(unitWidth * i, 0, unitWidth * i, unitHeight * mData.length, painttext);
+            }
         }
     }
 }
