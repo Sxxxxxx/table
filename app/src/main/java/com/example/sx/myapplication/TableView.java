@@ -7,6 +7,7 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.support.annotation.Nullable;
+import android.support.v4.content.ContextCompat;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -23,9 +24,8 @@ import java.util.List;
  * Created by sx on 2017/10/19.
  */
 
-public class TableView extends View {
+public class TableView extends BaseView {
 
-    private DisplayMetrics mDm;
     private Scroller mScroller;
     private Rect mRect;//计算statusBar高度
     private int unitWidth;
@@ -57,7 +57,7 @@ public class TableView extends View {
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-        setMeasuredDimension(unitWidth * 14, unitHeight * 100);
+        setMeasuredDimension(unitWidth * 14, unitHeight * mData.length);
     }
 
     /***
@@ -72,11 +72,9 @@ public class TableView extends View {
     }
 
     private void init() {
-        mDm = new DisplayMetrics();
-        ((Activity) getContext()).getWindowManager().getDefaultDisplay().getMetrics(mDm);
         paint.setTextAlign(Paint.Align.CENTER);
         paint.setColor(Color.RED);
-        painttext.setColor(Color.GRAY);
+        painttext.setColor(ContextCompat.getColor(getContext(), R.color.color_e0));
         painttext.setAntiAlias(true);
         paint.setTextSize((float) (mDm.density * 20 + 0.5));
         unitHeight = (int) (mDm.density * 50 + 0.5);//格子的宽高为50dp
@@ -85,6 +83,7 @@ public class TableView extends View {
         mMaximumVelocity = configuration.getScaledMaximumFlingVelocity();
         mMinimumVelocity = configuration.getScaledMinimumFlingVelocity();
         mScroller = new Scroller(getContext());
+        setBackgroundResource(R.color.cff);
     }
 
     /***
@@ -101,10 +100,10 @@ public class TableView extends View {
     protected void onScrollChanged(int l, int t, int oldl, int oldt) {
         super.onScrollChanged(l, t, oldl, oldt);
         if (mTopView != null) {
-            mTopView.scrollTo(l, t);
+            mTopView.scrollTo(l, 0);
         }
         if (mLeftView != null) {
-            mLeftView.scrollTo(l, t);
+            mLeftView.scrollTo(0, t);
         }
     }
 

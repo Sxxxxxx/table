@@ -5,27 +5,23 @@
     android:layout_height="match_parent"
     tools:context="com.example.sx.myapplication.MainActivity">
 
-    <LinearLayout
-        android:visibility="gone"
+    <com.example.sx.myapplication.TopView
         android:id="@+id/ll_x"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="50dp"
-        android:clipChildren="true"
-        android:orientation="horizontal">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:maxLines="1"
-            android:text="12312123121231212312123121231212312123121231212312" />
-    </LinearLayout>
+        android:layout_toRightOf="@+id/ll_date" />
 
     <LinearLayout
-        android:visibility="gone"
+        android:id="@+id/ll_date"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:orientation="vertical" />
+
+    <com.example.sx.myapplication.LeftView
         android:id="@+id/ll_y"
         android:layout_width="50dp"
         android:layout_height="match_parent"
-        android:orientation="vertical"></LinearLayout>
+        android:layout_below="@+id/ll_date" />
 
     <com.example.sx.myapplication.TableView
         android:id="@+id/table"
@@ -34,4 +30,8 @@
         android:layout_below="@+id/ll_x"
         android:layout_toRightOf="@id/ll_y" />
 
+    <!--<EditText-->
+    <!--android:id="@+id/et"-->
+    <!--android:layout_width="match_parent"-->
+    <!--android:layout_height="wrap_content" />-->
 </RelativeLayout>
